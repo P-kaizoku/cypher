@@ -1,48 +1,31 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"sync"
 	"time"
 )
 
-func worker(host string, ports <-chan int, wg *sync.WaitGroup) {
-	for port := range ports {
-		func() {
-			defer wg.Done()
-			address := fmt.Sprintf("%s:%d", host, port)
-			conn, err := net.DialTimeout("tcp", address, time.Second)
-			if err != nil {
-				fmt.Printf("%d close\n", port)
-				return
-			}
+type ScanResults struct {
+	Port int
+	Open bool
+}
 
-			fmt.Printf("%d open\n", port)
-			conn.Close()
+func workers(host string, ports <-chan int, mu *sync.Mutex, results *[]ScanResults, wg *sync.WaitGroup){
+	for port := ports{
+		func(){
+			defer wg.Done()
+			address := fmt.Sprinf("%s:%d", host, port)
+			conn, err := net.DialTimeout("tcp", address, time.Second)
+			result := ScanResults{Port: port}
+			if err == nil {
+				conn.Close()
+				result.Open = true
+			}
 		}()
 	}
 }
 
 func main() {
-	host := "scanme.nmap.org"
-	start := 20
-	end := 500
-	numWorkers := 600
 
-	ports := make(chan int, end-start+1)
-	var wg sync.WaitGroup
-
-	for range numWorkers {
-		go worker(host, ports, &wg)
-	}
-
-	for port := start; port <= end; port++ {
-		wg.Add(1)
-		ports <- port
-	}
-
-	close(ports)
-	wg.Wait()
-	fmt.Println("Scan completed")
 }
