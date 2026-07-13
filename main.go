@@ -60,9 +60,9 @@ func main() {
 	})
 
 	for _, r := range collected {
-		status := "close"
+		status := "Close"
 		if r.Open {
-			status = "open"
+			status = "Open"
 		}
 		fmt.Printf("%d: %s\n", r.Port, status)
 	}
