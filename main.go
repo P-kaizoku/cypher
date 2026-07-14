@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"sort"
@@ -32,18 +33,20 @@ func workers(host string, ports <-chan int, mu *sync.Mutex, results *[]ScanResul
 }
 
 func main() {
-	host := "scanme.nmap.org"
-	start := 20
-	end := 500
-	numWorkers := 500
+	host := flag.String("host", "scanme.nmap.org", "network to scan")
+	start := flag.Int("start", 1, "start port")
+	end := flag.Int("end", 1024, "end port")
+	worker := flag.Int("workers", 100, "concurrent workers")
+	verbose := flag.Bool("verbose", false, "to show close ports")
+	flag.Parse()
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var collected []ScanResults
 	ports := make(chan int, end-start+1)
 
-	for range numWorkers {
-		go workers(host, ports, &mu, &collected, &wg)
+	for range *worker {
+		go workers(*host, ports, &mu, &collected, &wg)
 	}
 
 	for port := start; port <= end; port++ {
