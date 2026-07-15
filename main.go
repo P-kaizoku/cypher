@@ -43,13 +43,17 @@ func main() {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var collected []ScanResults
-	ports := make(chan int, end-start+1)
+	if *end < *start {
+		fmt.Println("start port must be smaller than ending port")
+		return
+	}
+	ports := make(chan int, *end-*start+1)
 
 	for range *worker {
 		go workers(*host, ports, &mu, &collected, &wg)
 	}
 
-	for port := start; port <= end; port++ {
+	for port := *start; port <= *end; port++ {
 		wg.Add(1)
 		ports <- port
 	}
@@ -67,6 +71,10 @@ func main() {
 		if r.Open {
 			status = "Open"
 		}
+		if status == "Close" && !*verbose {
+			continue
+		}
+
 		fmt.Printf("%d: %s\n", r.Port, status)
 	}
 
