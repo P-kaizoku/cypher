@@ -36,9 +36,11 @@ func main() {
 	host := flag.String("host", "scanme.nmap.org", "network to scan")
 	start := flag.Int("start", 1, "start port")
 	end := flag.Int("end", 1024, "end port")
-	worker := flag.Int("workers", 100, "concurrent workers")
+	worker := flag.Int("worker", 100, "concurrent workers")
 	verbose := flag.Bool("verbose", false, "to show close ports")
 	flag.Parse()
+
+	startTime := time.Now()
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -66,10 +68,12 @@ func main() {
 		return collected[i].Port < collected[j].Port
 	})
 
+	openPorts := 0
 	for _, r := range collected {
 		status := "Close"
 		if r.Open {
 			status = "Open"
+			openPorts++
 		}
 		if status == "Close" && !*verbose {
 			continue
@@ -77,5 +81,8 @@ func main() {
 
 		fmt.Printf("%d: %s\n", r.Port, status)
 	}
+
+	elapsed := time.Since(startTime)
+	fmt.Printf("\nscanned %d ports in %v, %d open, %d closed", len(collected), elapsed, openPorts, len(collected)-openPorts)
 
 }
