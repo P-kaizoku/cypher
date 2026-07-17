@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func main() {
+func Progress() {
 	count := 0
 	for {
 		fmt.Print("\r") // move cursor to start of line
